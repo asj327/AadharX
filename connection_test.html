@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔗 HealthChain Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; border-bottom: 3px solid #4CAF50; padding-bottom: 10px; }
+        .test-card { background: #f5f5f5; padding: 20px; margin: 15px 0; border-radius: 10px; }
+        .test-success { border-left: 5px solid #4CAF50; background: #e8f5e9; }
+        .test-error { border-left: 5px solid #f44336; background: #ffebee; }
+        .test-pending { border-left: 5px solid #ff9800; background: #fff3e0; }
+        button { background: #4CAF50; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #45a049; }
+        .api-info { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        code { background: #272822; color: #f8f8f2; padding: 2px 6px; border-radius: 3px; }
+        .result-item { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔗 HealthChain Connection Test</h1>
+    <p>This tests if your frontend and backend are properly connected.</p>
+    
+    <button onclick="runAllTests()">▶️ Run All Connection Tests</button>
+    <button onclick="clearResults()">🗑️ Clear Results</button>
+    
+    <div id="results" style="margin-top: 30px;">
+        <div class="test-card test-pending" id="test1">
+            <h3>Test 1: Backend Server</h3>
+            <p>Checking if FastAPI backend is running...</p>
+        </div>
+        
+        <div class="test-card test-pending" id="test2">
+            <h3>Test 2: API Endpoints</h3>
+            <p>Testing all 5 backend endpoints...</p>
+        </div>
+        
+        <div class="test-card test-pending" id="test3">
+            <h3>Test 3: Frontend Files</h3>
+            <p>Checking frontend HTML/CSS/JS files...</p>
+        </div>
+        
+        <div class="test-card test-pending" id="test4">
+            <h3>Test 4: Frontend-Backend Connection</h3>
+            <p>Testing if frontend can call backend API...</p>
+        </div>
+        
+        <div class="test-card test-pending" id="test5">
+            <h3>Test 5: Full Integration</h3>
+            <p>Testing complete data flow...</p>
+        </div>
+    </div>
+    
+    <div class="api-info">
+        <h3>📡 Expected Configuration:</h3>
+        <p><strong>Backend URL:</strong> <code>http://localhost:8000</code></p>
+        <p><strong>Frontend Path:</strong> <code>frontend/index.html</code></p>
+        <p><strong>Test Aadhaar:</strong> <code>123456789012</code></p>
+        <p><strong>Hospital Key:</strong> <code>HOSPITAL123</code></p>
+    </div>
+    
+    <script>
+    const API_BASE = "http://localhost:8000";
+    
+    async function runAllTests() {
+        console.log("🔍 Starting connection tests...");
+        
+        await testBackendServer();
+        await testApiEndpoints();
+        await testFrontendFiles();
+        await testConnection();
+        await testFullIntegration();
+        
+        console.log("✅ All tests completed");
+    }
+    
+    async function testBackendServer() {
+        const el = document.getElementById('test1');
+        el.innerHTML = `
+            <h3>🔄 Test 1: Backend Server - TESTING</h3>
+            <p>Status: <strong>Checking...</strong></p>
+            <p><small>Response time: <span id="responseTime1">calculating...</span></small></p>
+        `;
+        el.className = "test-card test-pending";
+        
+        const startTime = performance.now();
+        
+        try {
+            const response = await fetch(`${API_BASE}/health`);
+            const data = await response.json();
+            const responseTime = performance.now() - startTime;
+            
+            el.innerHTML = `
+                <h3>✅ Test 1: Backend Server - RUNNING</h3>
+                <p>Status: <strong>${data.status}</strong></p>
+                <p>Service: ${data.service}</p>
+                <p><small>Response time: <span id="responseTime1">${responseTime.toFixed(2)}ms</span></small></p>
+            `;
+            el.className = "test-card test-success";
+            
+        } catch (error) {
+            const responseTime = performance.now() - startTime;
+            el.innerHTML = `
+                <h3>❌ Test 1: Backend Server - OFFLINE</h3>
+                <p>Error: ${error.message}</p>
+                <p><strong>Fix:</strong> Run in terminal: <code>cd backend && uvicorn main:app --reload</code></p>
+                <p><small>Response time: ${responseTime.toFixed(2)}ms (until failure)</small></p>
+            `;
+            el.className = "test-card test-error";
+        }
+    }
+    
+    async function testApiEndpoints() {
+        const el = document.getElementById('test2');
+        el.innerHTML = `
+            <h3>🔄 Test 2: API Endpoints - TESTING</h3>
+            <p>Testing all endpoints...</p>
+        `;
+        el.className = "test-card test-pending";
+        
+        const endpoints = [
+            { name: "Home", url: "/", method: "GET" },
+            { name: "Health", url: "/health", method: "GET" },
+            { name: "Emergency", url: "/emergency/123456789012?hospital_key=HOSPITAL123", method: "GET" },
+            { name: "Forms", url: "/forms/123456789012/ration", method: "GET" },
+            { name: "Vault", url: "/vault/123456789012", method: "GET" }
+        ];
+        
+        let results = [];
+        let passed = 0;
+        let failed = 0;
+        
+        for (const endpoint of endpoints) {
+            try {
+                const start = performance.now();
+                const response = await fetch(`${API_BASE}${endpoint.url}`, {
+                    method: endpoint.method
+                });
+                const time = performance.now() - start;
+                
+                if (response.ok) {
+                    results.push(`<div class="result-item">✅ ${endpoint.name}: ${time.toFixed(0)}ms</div>`);
+                    passed++;
+                } else {
+                    results.push(`<div class="result-item">❌ ${endpoint.name}: Failed (HTTP ${response.status})</div>`);
+                    failed++;
+                }
+            } catch (error) {
+                results.push(`<div class="result-item">❌ ${endpoint.name}: ${error.message}</div>`);
+                failed++;
+            }
+        }
+        
+        if (failed === 0) {
+            el.innerHTML = `
+                <h3>✅ Test 2: API Endpoints - ALL WORKING</h3>
+                ${results.join('')}
+                <p><strong>${passed} endpoints tested successfully</strong></p>
+            `;
+            el.className = "test-card test-success";
+        } else {
+            el.innerHTML = `
+                <h3>⚠️ Test 2: API Endpoints - ${failed} FAILED</h3>
+                ${results.join('')}
+                <p><strong>${passed} passed, ${failed} failed</strong></p>
+                <p><em>Check your main.py endpoints</em></p>
+            `;
+            el.className = failed === endpoints.length ? "test-card test-error" : "test-card test-pending";
+        }
+    }
+    
+    async function testFrontendFiles() {
+        const el = document.getElementById('test3');
+        el.innerHTML = `
+            <h3>🔄 Test 3: Frontend Files - TESTING</h3>
+            <p>Checking frontend files...</p>
+        `;
+        el.className = "test-card test-pending";
+        
+        const files = [
+            { name: "index.html", path: "frontend/index.html" },
+            { name: "script.js", path: "frontend/script.js" },
+            { name: "styles.css", path: "frontend/styles.css" }
+        ];
+        
+        let results = [];
+        let found = 0;
+        
+        for (const file of files) {
+            try {
+                const response = await fetch(file.path);
+                if (response.ok) {
+                    results.push(`<div class="result-item">✅ ${file.name} - Found</div>`);
+                    found++;
+                } else {
+                    results.push(`<div class="result-item">❌ ${file.name} - Not found (${response.status})</div>`);
+                }
+            } catch (error) {
+                results.push(`<div class="result-item">❌ ${file.name} - Error: ${error.message}</div>`);
+            }
+        }
+        
+        if (found === files.length) {
+            el.innerHTML = `
+                <h3>✅ Test 3: Frontend Files - ALL FOUND</h3>
+                ${results.join('')}
+                <p><a href="../frontend/index.html" target="_blank">🎯 Open Frontend</a></p>
+            `;
+            el.className = "test-card test-success";
+        } else if (found > 0) {
+            el.innerHTML = `
+                <h3>⚠️ Test 3: Frontend Files - PARTIAL</h3>
+                ${results.join('')}
+                <p><strong>${found} of ${files.length} files found</strong></p>
+                <p><em>Some frontend files may be missing</em></p>
+            `;
+            el.className = "test-card test-pending";
+        } else {
+            el.innerHTML = `
+                <h3>❌ Test 3: Frontend Files - NOT FOUND</h3>
+                <p>No frontend files found at: <code>frontend/</code></p>
+                <p><strong>Fix:</strong> Create <code>frontend/</code> folder with:</p>
+                <ul>
+                    <li><code>index.html</code> - Main HTML file</li>
+                    <li><code>script.js</code> - JavaScript logic</li>
+                    <li><code>styles.css</code> - Styling</li>
+                </ul>
+            `;
+            el.className = "test-card test-error";
+        }
+    }
+    
+    async function testConnection() {
+        const el = document.getElementById('test4');
+        el.innerHTML = `
+            <h3>🔄 Test 4: Frontend-Backend Connection - TESTING</h3>
+            <p>Testing connection...</p>
+        `;
+        el.className = "test-card test-pending";
+        
+        try {
+            // Test backend connection
+            const backendStart = performance.now();
+            const backendResponse = await fetch(`${API_BASE}/health`);
+            const backendTime = performance.now() - backendStart;
+            
+            if (!backendResponse.ok) {
+                throw new Error(`Backend returned HTTP ${backendResponse.status}`);
+            }
+            
+            // Try to check frontend configuration
+            let frontendConfig = false;
+            try {
+                const scriptResponse = await fetch("../frontend/script.js");
+                if (scriptResponse.ok) {
+                    const scriptContent = await scriptResponse.text();
+                    frontendConfig = scriptContent.includes("localhost:8000") || 
+                                    scriptContent.includes("API_BASE") ||
+                                    scriptContent.includes("127.0.0.1:8000");
+                }
+            } catch (e) {
+                // Ignore frontend script check errors
+            }
+            
+            el.innerHTML = `
+                <h3>✅ Test 4: Frontend-Backend Connection - CONNECTED</h3>
+                <div class="result-item">✓ Backend reachable (${backendTime.toFixed(0)}ms)</div>
+                <div class="result-item">${frontendConfig ? '✓' : '⚠'} Frontend API configuration ${frontendConfig ? 'found' : 'not verified'}</div>
+                <div class="result-item">✓ CORS should be enabled</div>
+                <p><strong>Browser ↔ Backend connection established</strong></p>
+            `;
+            el.className = "test-card test-success";
+            
+        } catch (error) {
+            el.innerHTML = `
+                <h3>❌ Test 4: Frontend-Backend Connection - FAILED</h3>
+                <p>Error: ${error.message}</p>
+                <p><strong>Possible issues:</strong></p>
+                <ul>
+                    <li>Backend server not running</li>
+                    <li>CORS not enabled in backend</li>
+                    <li>Network/firewall blocking connection</li>
+                </ul>
+                <p><strong>Fix CORS:</strong> In <code>main.py</code>, add:
+                <code><pre>
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Or specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+                </pre></code></p>
+            `;
+            el.className = "test-card test-error";
+        }
+    }
+    
+    async function testFullIntegration() {
+        const el = document.getElementById('test5');
+        el.innerHTML = `
+            <h3>🔄 Test 5: Full Integration - TESTING</h3>
+            <p>Testing complete data flow...</p>
+        `;
+        el.className = "test-card test-pending";
+        
+        try {
+            const startTime = performance.now();
+            const response = await fetch(`${API_BASE}/emergency/123456789012?hospital_key=HOSPITAL123`);
+            const responseTime = performance.now() - startTime;
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // Check response structure
+            const hasEmergencyData = data.emergency_data || data.data;
+            const hasRestricted = data.restricted || data.privacy_data;
+            
+            if (hasEmergencyData) {
+                const emergencyData = data.emergency_data || data.data;
+                el.innerHTML = `
+                    <h3>✅ Test 5: Full Integration - WORKING</h3>
+                    <div class="result-item">✓ Emergency endpoint accessible (${responseTime.toFixed(0)}ms)</div>
+                    <div class="result-item">✓ Data structure valid</div>
+                    ${emergencyData.name ? `<div class="result-item">✓ Patient: <strong>${emergencyData.name}</strong></div>` : ''}
+                    ${emergencyData.blood_type ? `<div class="result-item">✓ Blood type: ${emergencyData.blood_type}</div>` : ''}
+                    ${hasRestricted ? `<div class="result-item">✓ Privacy protection active</div>` : ''}
+                    <p><strong>🎉 Full system integration verified!</strong></p>
+                    <p><small>Response: ${JSON.stringify(data).substring(0, 200)}...</small></p>
+                `;
+                el.className = "test-card test-success";
+            } else {
+                el.innerHTML = `
+                    <h3>⚠️ Test 5: Full Integration - DATA FORMAT ISSUE</h3>
+                    <p>Backend responded but data format may be unexpected</p>
+                    <p>Expected: <code>{ emergency_data: { ... }, restricted: { ... } }</code></p>
+                    <p>Received: <code>${JSON.stringify(data).substring(0, 100)}...</code></p>
+                    <p><em>Check emergency endpoint response format in main.py</em></p>
+                `;
+                el.className = "test-card test-pending";
+            }
+            
+        } catch (error) {
+            el.innerHTML = `
+                <h3>❌ Test 5: Full Integration - FAILED</h3>
+                <p>Complete data flow test failed</p>
+                <p>Error: ${error.message}</p>
+                <p><strong>Check:</strong></p>
+                <ul>
+                    <li>Emergency endpoint exists in main.py</li>
+                    <li>Test Aadhaar (123456789012) is in database</li>
+                    <li>Hospital key (HOSPITAL123) is valid</li>
+                </ul>
+            `;
+            el.className = "test-card test-error";
+        }
+    }
+    
+    function clearResults() {
+        const tests = ['test1', 'test2', 'test3', 'test4', 'test5'];
+        tests.forEach(id => {
+            const el = document.getElementById(id);
+            const testNum = id.replace('test', '');
+            el.innerHTML = `
+                <h3>Test ${testNum}: Pending</h3>
+                <p>Click "Run All Tests" to start...</p>
+            `;
+            el.className = "test-card test-pending";
+        });
+    }
+    
+    // Auto-run tests when page loads
+    window.onload = function() {
+        setTimeout(runAllTests, 1000);
+    };
+    </script>
+</body>
+</html>
